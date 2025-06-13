@@ -12,7 +12,7 @@ format:
     embed-resources: true
     grid:
       body-width: 800px
-    theme: cerulean
+    theme: journal
   revealjs: 
     slide-number: true
     html-math-method: mathjax
@@ -85,6 +85,12 @@ $$
 \small\text{stack.loss} = \beta_0 + \beta_1\cdot{\color{darkgreen}{\text{Variable}}} +\epsilon
 $$
 
+where:
+
+-   $\beta_0$ - Intercept (predicted stack loss when variable is zero)
+-   $\beta_1$ - Slope (average stackloss change for a one-unit increase in the variable)
+-   $\epsilon$ - Error/Residual term
+
 **Fig 1.** illustrates scatterplots of `stack.loss` (lbs/day) against each predictor i.e. `Acid.Conc.` (%), `Air.Flow` (scfm), and `Water.Temp` (°F) with fitted linear regression curves (red lines) for each input:
 
 ```{r}
@@ -135,6 +141,12 @@ Using all input variables, we can model the `stackloss` dataset by the given mul
 $$
 \small\text{stack.loss} = \beta_0 + \beta_1\cdot{\color{darkblue}{\text{Air.Flow}}} + \beta_2\cdot{\color{red}{\text{Water.Temp}}} + \beta_3\cdot{\color{darkgreen}{\text{Acid.Conc.}}} +\epsilon
 $$
+
+where:
+
+-   $\beta_0$ - Intercept (expected stack loss when all predictors are zero)
+-   $\beta_j (j\neq0)$ - Slope (effect of predictor $j$ holding all other predictors constant)
+-   $\epsilon$ - Error/Residual term
 
 **Fig 2.** shows a scatterplot of observed vs. predicted `stack.loss` values using the full multiple regression model. The deviation of points from the 45° reference line in the plot (red dashed line) show how much the model varies from the actual stack loss.
 
