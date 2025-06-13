@@ -63,17 +63,17 @@ knitr::kable(vars,caption = "")
 
 ### Preview of `stackloss`
 
-Top 6 observations of the dataset are as follows:
+Top 5 observations of the dataset are as follows:
 
 ```{r}
 #| label: stackloss-head
 # extract top  observations using head()
-stack_head <- head(stackloss)
+stack_head <- head(stackloss,5)
 # render as kable table using knitr library
 knitr::kable(stack_head, caption  = "", align = c("c", "c", "c", "c", "c"))
 ```
 
-> *More about this dataset can be found in the [stackloss documentation](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/stackloss.html)*
+> *More about this dataset can be found in the [official stackloss documentation](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/stackloss.html)*
 
 ## Regression plots
 
@@ -152,9 +152,9 @@ stackloss$predicted <- fitted(fit_lr)
 # plot observed vs fitted curve for full model
 ggplot(stackloss, aes(x = predicted, y = stack.loss))+
   # mark the actual observed vs fitted points as dark green points
-  geom_point(color = "darkgreen", size = 2)+
+  geom_point(color = "steelblue", size = 2)+
   # add 45° reference line (y = 0+1*x) as red dashed line to mark perfect prediction
-  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size=1.1)+
+  geom_abline(intercept = 0, slope = 1, color = "purple", linetype = "dashed", size=1.1)+
   # plot caption and axes labels
   labs(caption = "Fig 2. Observed vs. predicted stack loss",
     x     = "Predicted stack.loss (lbs/day)",
