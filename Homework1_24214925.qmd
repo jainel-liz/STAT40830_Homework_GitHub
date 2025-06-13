@@ -1,0 +1,180 @@
+---
+title: "STAT40830-Adv Data Prog with R (online)"
+subtitle: "Homework 1"
+author: "Jainel Liz Boban (24214925)"
+date: today
+date-format: long
+format:
+  html:
+    fontsize: 1.2em
+    toc: true
+    toc-title: '**Contents**'
+    embed-resources: true
+    grid:
+      body-width: 800px
+    theme: cerulean
+  revealjs: 
+    slide-number: true
+    html-math-method: mathjax
+    theme: sky
+    footer: "Homework 1"
+    fragments: true
+    menu: true
+    scrollable: true
+execute: 
+  eval: true
+  echo: false
+  message: false
+  warning: false
+  error: true
+---
+
+## Introduction
+
+**Dataset used:** `stackloss`
+
+> The `stackloss` dataset records 21 observations from a chemical plant that oxidizes ammonia ([$NH_3$]{style="color: red;font-size: 0.8em;"}) to produce nitric acid ([$HNO_3$]{style="color: red;font-size: 0.8em;"}). It consists of input variables (air flow, water temperature, acid concentration) and the resulting amount of unabsorbed/wasted ammonia (stack loss). Therefore, it helps to determine the plant's efficiency according to change in input.
+
+```{r}
+#| label: load-dataset
+data("stackloss") # load 'stackloss' data-set
+```
+
+### Variables
+
+Each row in this dataset records the following readings:
+
+```{r}
+#| label: stackloss-vars
+# create data-frame 'vars' to describe each variable in data-set
+vars <- data.frame(
+  # variable column to store variable names as in data-set
+  Variable      = c("Air.Flow", "Water.Temp", "Acid.Conc.", "stack.loss"),
+  # description of each 4 variables as second column
+  Description   = c("Flow of cooling air",
+                    "Temperature of cooling water",
+                    "Concentration of acid added",
+                    "Amount of ammonia gas wasted"),
+  # unit of each variable from references in documentation
+  Unit = c("scfm", "°F", "%", "lbs/day"))
+# use kable() from  knitr library to render a neat table
+knitr::kable(vars,caption = "")  
+```
+
+### Preview of `stackloss`
+
+Top 6 observations of the dataset are as follows:
+
+```{r}
+#| label: stackloss-head
+# extract top  observations using head()
+stack_head <- head(stackloss)
+# render as kable table using knitr library
+knitr::kable(stack_head, caption  = "", align = c("c", "c", "c", "c", "c"))
+```
+
+> *More about this dataset can be found in the [stackloss documentation](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/stackloss.html)*
+
+## Regression plots
+
+### Linear regression using each input variable
+
+Using each input variable, we can model the `stackloss` dataset by linear regression formulas:
+
+$$
+\small\text{stack.loss} = \beta_0 + \beta_1\cdot{\color{darkgreen}{\text{Variable}}} +\epsilon
+$$
+
+**Fig 1.** illustrates scatterplots of `stack.loss` (lbs/day) against each predictor i.e. `Acid.Conc.` (%), `Air.Flow` (scfm), and `Water.Temp` (°F) with fitted linear regression curves (red lines) for each input:
+
+```{r}
+#| label: facet-plot
+#| fig-height: 10
+#| fig-width: 15
+# library for plotting/visualization
+library(ggplot2)
+
+# convert data-frame to long format, each predictor will be separate row for facet use
+stackloss_long <- stackloss |> tidyr::pivot_longer(
+  cols      = c(Air.Flow, Water.Temp, Acid.Conc.), # columns to pivot
+  names_to  = "predictor", # column with input variable names
+  values_to = "value") # column to store values corresponding to each variable
+
+# Faceted plot of one scatter-plot with regression line per input predictor (variable)
+ggplot(stackloss_long, aes(x = value, y = stack.loss))+ # plot stack.loss vs variable
+  # mark data points in dark blue
+  geom_point(color = "darkblue", size = 3)+
+  # add regression line in red (without error band i.e. se=FALSE)
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "red", size=1.5)+
+  # split plot into multiple facets, one for each variable
+  facet_wrap(~ predictor,
+             scales = "free_x", # different value range for different predictors (x-axis)
+             labeller = as_labeller(c("Air.Flow" = "Air.Flow (scfm)", 
+                                      "Water.Temp" = "Water.Temp (°F)",
+                                      "Acid.Conc."  = "Acid.Conc. (%)")))+ # custom labels with units
+  # plot caption and axes labels
+  labs(caption = "Fig 1. Stack loss vs each predictor", 
+       x = NULL, # no label for overall x axis as each facet already have a label
+       y = "stack.loss (lbs/day)")+
+  # apply minimal theme for cleaner visualization
+  theme_minimal()+
+  # theme settings (size, style, angle, spacing, etc) for axes, facets and plot
+  theme(axis.text.x = element_text(size = 15, angle=45),
+    axis.text.y = element_text(size = 15),
+    axis.title.y = element_text(size = 20, vjust=3),
+    strip.text = element_text(size = 20),
+    plot.caption = element_text(size=25,face="bold",hjust = 0.5,
+                                margin = margin(t = 20)),
+    plot.margin = unit(c(1.5, 1.5, 0, 1.5), "cm"))
+```
+
+### Linear regression using all input variables
+
+Using all input variables, we can model the `stackloss` dataset by the given multiple linear regression formula:
+
+$$
+\small\text{stack.loss} = \beta_0 + \beta_1\cdot{\color{darkblue}{\text{Air.Flow}}} + \beta_2\cdot{\color{red}{\text{Water.Temp}}} + \beta_3\cdot{\color{darkgreen}{\text{Acid.Conc.}}} +\epsilon
+$$
+
+**Fig 2.** shows a scatterplot of observed vs. predicted `stack.loss` values using the full multiple regression model. The deviation of points from the 45° reference line in the plot (red dashed line) show how much the model varies from the actual stack loss.
+
+```{r}
+#| label: fullmodel-plot
+#| fig-height: 6
+#| fig-width: 6
+#| fig-align: center
+# fit full multiple linear regression model via lm() using 3 predictors
+fit_lr <- lm(stack.loss ~ Air.Flow + Water.Temp + Acid.Conc., data = stackloss)
+
+# add fitted values as a new column to stackloss data-frame
+stackloss$predicted <- fitted(fit_lr)
+
+# plot observed vs fitted curve for full model
+ggplot(stackloss, aes(x = predicted, y = stack.loss))+
+  # mark the actual observed vs fitted points as dark green points
+  geom_point(color = "darkgreen", size = 2)+
+  # add 45° reference line (y = 0+1*x) as red dashed line to mark perfect prediction
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed", size=1.1)+
+  # plot caption and axes labels
+  labs(caption = "Fig 2. Observed vs. predicted stack loss",
+    x     = "Predicted stack.loss (lbs/day)",
+    y     = "Observed stack.loss (lbs/day)")+
+  # apply minimal theme for cleaner visualization
+  theme_minimal()+
+  # theme settings for axes and plot
+  theme(axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.title.y = element_text(size = 10, vjust=3),
+        axis.title.x = element_text(size = 10,margin = margin(t = 6, b=10)),
+        plot.caption = element_text(size=13,face="bold",hjust = 0.5,
+                                margin = margin(t = 6)),
+        plot.margin = unit(c(1, 1, 0, 1), "cm"))
+```
+
+### Observations
+
+-   In [**Fig 1.**]{style="color: darkblue;"},each facet shows how stack loss changes with each input variable. It can be seen that the data points are spread out around the regression line. Although air flow is somewhat useful, it can be said that no single predictor by itself can explain well how much ammonia is left unabsorbed.
+
+-   In [**Fig 2.**]{style="color: darkblue;"}, we plotted the observed wasted ammonia versus model prediction using all three inputs at once. Most points align with the 45° reference line. Hence, the combined model is good at predicting how much ammonia is wasted.
+
+-   To really model how much ammonia will be left unreacted, we need to carefully adjust all three measurements: air flow, water temperature and acid concentration.
